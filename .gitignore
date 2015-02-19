@@ -1,0 +1,14 @@
+*~
+
+*.aux
+*.log
+
+__*__
+
+*deleteme*
+
+*.zip
+*.tar
+*.tar.gz
+
+*.csv
