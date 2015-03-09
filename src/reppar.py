@@ -100,7 +100,10 @@ class ReportParser():
 class RulesParser():
 
     def __init__(self, fname):
-        pass
+        super().__init__(fname)
+        l = logging.getLogger(__name__)
+        l.debug("RulesClassParser.__init__()")
+
 
 
 class ClassRulesParser(ReportParser):
@@ -110,8 +113,7 @@ class ClassRulesParser(ReportParser):
         l = logging.getLogger(__name__)
         l.debug("RulesClassParser.__init__()")
 
-        cnamep = re.compile("^Класс [\d]*$")
-        cnames = [s for s in self.soup.strings if re.match(cnamep, s)]
+        cnames = self.soup.find_all(text=re.compile("^Класс [\d]*$"))
         assert len(cnames) == self.nclasses
 
         self.rules = {}
