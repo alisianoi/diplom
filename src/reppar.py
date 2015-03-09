@@ -12,22 +12,15 @@ from bs4 import BeautifulSoup
 from log import logsettings
 
 
-class RulesParser():
-
-    def __init__(self, fname):
-        pass
-
-class RulesClassParser():
+class ReportParser():
 
     def __init__(self, fname):
         l = logging.getLogger(__name__)
 
-        l.debug("RulesClassParser.__init__()")
-
         with open(cmd.fname, "r", encoding="cp1251") as src:
-            soup = BeautifulSoup(src)
+            self.soup = BeautifulSoup(src)
 
-        tr_features = soup.find(
+        tr_features = self.soup.find(
             text=re.compile("^Пространство$")
         ).find_next("tr")
         tr_classes = tr_features.next_sibling
@@ -39,44 +32,21 @@ class RulesClassParser():
         )
         assert self.nclasses >= 1 and self.nfeatures >= 1
 
-        cnamep = re.compile("^Класс [\d]*$")
-        cnames = [s for s in soup.strings if re.match(cnamep, s)]
-        assert len(cnames) == self.nclasses
-
-        self.rules = {}
-        for i, cname in enumerate(cnames):
-            l.debug("{} out of {}".format(i + 1, len(cnames)))
-
-            # advance to the first rule of current cname
-            tr_rule = cname.find_next("tr")
-
-            crules = []
-            # tr_rule.string is None if it's a rule
-            while not tr_rule.string:
-                s = [s for s in tr_rule.strings]
-                assert len(s) == 4
-
-                crules.append(
-                    self._build_rule(s[2], fletter = "x", delim="<")
-                )
-
-                tr_rule = tr_rule.next_sibling
-
-            self.rules[i] = crules
-            l.debug("{} rules for class {}".format(
-                len(self.rules), i + 1)
+        l.debug(
+            "finished common parsing: {} classes, {} features".format(
+                self.nclasses, self.nfeatures
             )
-
+        )
 
     def _build_rule(self, data, fletter="X", delim="<="):
         """A list of lists of lower and upper bounds on all features.
 
         Builds a full rule. Assumes that features are sorted.
 
+        data is the raw string with the rule
         fletter is the letter to denote `feature`
         delim is supposed to be one of <, >, <=, >=
-        minv and maxv are placeholders fot those rules where there
-        is no lower (or upper) bound"""
+        """
 
         l = logging.getLogger(__name__)
 
@@ -124,6 +94,49 @@ class RulesClassParser():
         rule = rule + lacking
 
         return rule
+
+
+
+class RulesParser():
+
+    def __init__(self, fname):
+        pass
+
+
+class ClassRulesParser(ReportParser):
+
+    def __init__(self, fname):
+        super().__init__(fname)
+        l = logging.getLogger(__name__)
+        l.debug("RulesClassParser.__init__()")
+
+        cnamep = re.compile("^Класс [\d]*$")
+        cnames = [s for s in self.soup.strings if re.match(cnamep, s)]
+        assert len(cnames) == self.nclasses
+
+        self.rules = {}
+        for i, cname in enumerate(cnames):
+            l.debug("{} out of {}".format(i + 1, len(cnames)))
+
+            # advance to the first rule of current cname
+            tr_rule = cname.find_next("tr")
+
+            crules = []
+            # tr_rule.string is None if it's a rule
+            while not tr_rule.string:
+                s = [s for s in tr_rule.strings]
+                assert len(s) == 4
+
+                crules.append(
+                    self._build_rule(s[2], fletter = "x", delim="<")
+                )
+
+                tr_rule = tr_rule.next_sibling
+
+            self.rules[i] = crules
+            l.debug("{} rules for class {}".format(
+                len(self.rules), i + 1)
+            )
 
 
 class RulesReport():
@@ -213,14 +226,9 @@ if __name__ == "__main__":
     description = "Parser for Recognition reports"
     aap = argparse.ArgumentParser(description=description)
 
-    aap.add_argument(
-        "fname",
-        help="name of Recognition report file"
-    )
-    aap.add_argument(
-        "-v", action="count",
-        help="verbosity level"
-    )
+    aap.add_argument("fname", help="name of Recognition report file")
+    aap.add_argument("-v", action="count", help="verbosity level")
+
     g = aap.add_mutually_exclusive_group(required=True)
     g.add_argument(
         "--lrules", action="store_true", help="logical rules"
@@ -234,7 +242,7 @@ if __name__ == "__main__":
     logging.config.dictConfig(logsettings)
 
     if cmd.lclass:
-        pprint.pprint(RulesClassParser(cmd.fname).rules)
+        pprint.pprint(ClassRulesParser(cmd.fname).rules)
     elif cmd.lrules:
         assert False
     else:
