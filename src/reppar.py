@@ -32,6 +32,10 @@ class ReportParser():
         )
         assert self.nclasses >= 1 and self.nfeatures >= 1
 
+        # this will be a dictionary of rules: key is a class, value is
+        # a list of rules for that class.
+        self.rules = {}
+
         l.debug(
             "finished common parsing: {} classes, {} features".format(
                 self.nclasses, self.nfeatures
@@ -39,7 +43,7 @@ class ReportParser():
         )
 
     def _build_rule(self, data, fletter="X", delim="<="):
-        """A list of lists of lower and upper bounds on all features.
+        """A tuple of tuples of lower and upper bounds on all features.
 
         Builds a full rule. Assumes that features are sorted.
 
@@ -82,28 +86,95 @@ class ReportParser():
                 l.critical("Problem parsing feature range")
                 sys.exit()
 
-            rule.append([minval, maxval])
+            rule.append((minval, maxval))
             # some features preceding `ftridx` might have been skipped
-            skip = [[minv, maxv] for i in range(len(rule) + 1, ftridx)]
+            skip = [(minv, maxv) for i in range(len(rule) + 1, ftridx)]
             rule = skip + rule
 
         # some features following `ftridx` might not be present
         lacking = [
-            [minv, maxv] for i in range(len(rule), self.nfeatures)
+            (minv, maxv) for i in range(len(rule), self.nfeatures)
         ]
         rule = rule + lacking
 
-        return rule
+        return tuple(rule)
 
 
-
-class RulesParser():
+class RulesParser(ReportParser):
 
     def __init__(self, fname):
         super().__init__(fname)
         l = logging.getLogger(__name__)
         l.debug("RulesClassParser.__init__()")
 
+        rtables = self.soup.find_all(
+            text=re.compile("^Найденные закономерности$")
+        )
+        assert len(rtables) >= 1
+
+        for t in rtables:
+            rules = self._table2rules(t)
+
+            for key in rules.keys():
+                assert isinstance(rules[key], set)
+                if key in self.rules.keys():
+                    l.debug("there were {} rules".format(
+                        len(self.rules[key]))
+                    )
+                    self.rules[key].union(rules[key])
+                    l.debug("there are {} rules".format(
+                        len(self.rules[key]))
+                    )
+                else:
+                    self.rules[key] = rules[key]
+
+        for key in self.rules.keys():
+            self.rules[key] = list(self.rules[key])
+
+    def _table2rules(self, rtable):
+        l = logging.getLogger(__name__)
+        l.debug("RulesParser._table2rules()")
+
+        tr_rule = rtable.find_next("tr")
+        nrules = int([s for s in tr_rule.strings][1])
+        l.debug("there are a total of {} rules".format(nrules))
+
+        rules, crules = {}, [] # `rules` shadows class instance
+        rulep = re.compile("\(класс (\d)*\)$")
+
+        tr_rule = tr_rule.next_sibling
+        s = [s for s in tr_rule.strings]
+        idx = int(rulep.search(s[0]).group(1))
+        crules.append(self._build_rule(s[1]))
+
+        for i in range(1, nrules):
+            tr_rule = tr_rule.next_sibling
+
+            s = [s for s in tr_rule.strings]
+            nidx = int(rulep.search(s[0]).group(1))
+            if (idx == nidx): # this rule has the same class as before
+                crules.append(self._build_rule(s[1]))
+            else:
+                l.debug(
+                    "switching classes: {} to {} on rule {}".format(
+                        idx, nidx, i
+                    )
+                )
+                rules[idx] = set(tuple(crules))
+                crules, idx = [], nidx
+                l.debug(
+                    "class {} adding {} rules".format(
+                        idx - 1, len(rules[idx - 1])
+                    )
+                )
+
+        # rules of the final class
+        rules[idx] = set(tuple(crules))
+        l.debug(
+            "class {} adding {} rules".format(idx, len(rules[idx]))
+        )
+
+        return rules
 
 
 class ClassRulesParser(ReportParser):
@@ -141,87 +212,6 @@ class ClassRulesParser(ReportParser):
             )
 
 
-class RulesReport():
-
-    def __init__(self):
-        super().__init__()
-
-        super().info("RulesReport __init__() started")
-
-        pattern = "(\d*(\.\d*)?<=)?X\d*(<=\d*(\.\d*)?)?"
-        self._rule_pattern = re.compile(pattern)
-
-        super().info("RulesReport __init__() finished")
-
-    def _parse_rule(self, data):
-        if self._cur_rule >= self._num_rules:
-            super().critical("There are too many rules")
-            return
-
-        if data.startswith("Закономерность"):
-            label = re.search("\(класс \d*\)$", data)
-            if label == None:
-                super().critical("Could not find out class")
-            else:
-                label = label.group().strip("()")
-                if self._cur_label != label:
-                    # this is a new class label --- create a key in
-                    # the rules dictionary for it
-                    self._cur_label = label
-                    self._rules[label] = []
-
-                    super().info("Creating new label {}".format(label))
-        else:
-            rule = self._build_rule(data)
-            self._rules[self._cur_label].append(rule)
-
-            self._cur_rule += 1
-            if self._cur_rule == self._num_rules:
-                self._substate = "parse rules done"
-
-                msg = [self._state, self._substate]
-                super().info(
-                    "Entering state {}, substate {}".format(*msg)
-                )
-
-    def _handle_rule_table(self, data):
-        if (self._state == "rule table" and
-            self._substate == "default" and
-            data == "Количество закономерностей"):
-            self._substate = "num of rules"
-
-            msg = [self._state, self._substate]
-            super().info("Entering state {}, substate {}".format(*msg))
-        elif self._substate == "num of rules":
-            self._num_rules = int(data)
-            self._cur_rule = 0
-
-            # create a special minmax rule which will hold the broadest
-            # among the encountered ranges for each conjunction
-            minfloat, maxfloat = self._minv, self._maxv
-            self._rules["minmax_rule"] = [
-                [maxfloat, minfloat] for i in range(self._num_features)
-            ]
-
-            self._substate = "parse rules"
-
-            msg = [self._state, self._substate]
-            super().info("Entering state {}, substate {}".format(*msg))
-        elif self._substate == "parse rules":
-            self._parse_rule(data)
-
-    def handle_data(self, data):
-        super().handle_data(data)
-        if (self._state == "general info parsed" and
-            data == "Найденные закономерности"):
-            self._state = "rule table"
-
-            msg = [self._state, self._substate]
-            super().info("Entering state {}, substate {}".format(*msg))
-        elif self._state == "rule table":
-            self._handle_rule_table(data)
-
-
 if __name__ == "__main__":
     import os, argparse
 
@@ -244,8 +234,12 @@ if __name__ == "__main__":
     logging.config.dictConfig(logsettings)
 
     if cmd.lclass:
-        pprint.pprint(ClassRulesParser(cmd.fname).rules)
+        crp = ClassRulesParser(cmd.fname)
+        for key in crp.rules.keys(): print(type(crp.rules[key]))
+        print(crp.rules[key][0])
     elif cmd.lrules:
-        assert False
+        rp = RulesParser(cmd.fname)
+        for key in rp.rules.keys(): print(type(rp.rules[key]))
+        print(rp.rules[key][0])
     else:
         assert False
