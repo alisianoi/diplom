@@ -4,7 +4,15 @@ logsettings = {
         '__main__' : {
             'level' : 'DEBUG',
             'handlers' : ['console'],
-        }
+        },
+        'reppar' : {
+            'level' : 'DEBUG',
+            'handlers' : ['console'],
+        },
+        'tabpar' : {
+            'level' : 'DEBUG',
+            'handlers' : ['console'],
+        },
     },
     'handlers' : {
         'console' : {
