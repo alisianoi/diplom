@@ -13,6 +13,10 @@ logsettings = {
             'level' : 'DEBUG',
             'handlers' : ['console'],
         },
+        'procrules' : {
+            'level' : 'DEBUG',
+            'handlers' : ['console'],
+        }
     },
     'handlers' : {
         'console' : {
