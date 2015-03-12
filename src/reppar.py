@@ -17,7 +17,9 @@ class ReportParser():
     def __init__(self, fname):
         l = logging.getLogger(__name__)
 
-        with open(cmd.fname, "r", encoding="cp1251") as src:
+        self.minv, self.maxv = -np.Inf, +np.Inf
+
+        with open(fname, "r", encoding="cp1251") as src:
             self.soup = BeautifulSoup(src)
 
         tr_features = self.soup.find(
@@ -51,7 +53,7 @@ class ReportParser():
 
         l = logging.getLogger(__name__)
 
-        [minv, maxv] = [-np.Inf, +np.Inf]
+        minv, maxv = self.minv, self.maxv
 
         # digit-dot-digit
         ddd = "\d*(\.\d*)?"
