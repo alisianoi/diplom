@@ -29,21 +29,26 @@ class TabDataParser:
 
             self.data = dict()
 
-            for i in range(self.nclasses):
-                self.data[i + 1] = []
-                l, r = cumcount[i], cumcount[i + 1]
-                for j in range(l, r):
-                    x = tuple(float(k) for k in src.readline().split())
-                    assert len(x) == self.nfeatures
-                    if self.NaN in x: log.warning("holes in data")
-                    self.data[i + 1].append(x)
-                # each class finishes with a newline
-                x = src.readline()
-                log.debug(
-                    "class {}, {} objects".format(
-                        i + 1, len(self.data[i + 1])
-                    )
-                )
+            lines = (line for line in (l.strip() for l in src) if line)
+
+            label = 1
+            self.data[label] = []
+            for i, line in enumerate(lines):
+                x = tuple(float(feature) for feature in line.split())
+                assert len(x) == self.nfeatures
+                if self.NaN in x: log.warning("holes in data")
+                self.data[label].append(x)
+                if i + 1 == cumcount[label]:
+                    l, ll = label, len(self.data[label])
+                    log.debug("label {}, {} objects".format(l, ll))
+
+                    if i + 1 != cumcount[-1]:
+                        label += 1
+                        self.data[label] = []
+
+            for i in lines:
+                log.warning("there is data left in file: {}".format(i))
+                assert False
 
 
 if __name__ == "__main__":
