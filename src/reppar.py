@@ -106,7 +106,7 @@ class RulesParser(ReportParser):
     def __init__(self, fname):
         super().__init__(fname)
         l = logging.getLogger(__name__)
-        l.debug("RulesClassParser.__init__()")
+        l.debug("RulesParser.__init__()")
 
         rtables = self.soup.find_all(
             text=re.compile("^Найденные закономерности$")

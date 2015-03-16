@@ -12,7 +12,6 @@ from reppar import RulesParser, ClassRulesParser
 
 
 def apply_rule(rule, x):
-    log = logging.getLogger(__name__)
     assert len(rule) == 2 * len(x)
 
     t = 0
@@ -22,6 +21,7 @@ def apply_rule(rule, x):
         t += 2
 
     return True
+
 
 class RulesStats():
 
