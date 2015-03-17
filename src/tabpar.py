@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy as np
 import logging, logging.config
 
 ### custom imports follow ###
@@ -12,6 +13,8 @@ class TabDataParser:
     def __init__(self, fname):
 
         log = logging.getLogger(__name__)
+
+        self.fname = fname
 
         with open(fname) as src:
             header = [int(i) for i in src.readline().split()]
@@ -49,6 +52,20 @@ class TabDataParser:
             for i in lines:
                 log.warning("there is data left in file: {}".format(i))
                 assert False
+
+    def np2tab(self, fname, data, labels, nan="-1"):
+        cls = np.unique(labels)
+        [N, D] = data.shape
+
+        with open(fname, 'w') as dst:
+            l = " ".join(
+                [str(i) for i in np.cumsum(np.binocount(labels))]
+            )
+            print("{} {}".format(D, N) + " " + l + " " + nan, file=dst)
+
+            for x in data:
+                print(" ".join([str(i) for i in x]), file=dst)
+
 
 
 if __name__ == "__main__":
