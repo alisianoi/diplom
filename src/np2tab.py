@@ -7,3 +7,6 @@ def np2tab(fname, data, labels, nan="-1"):
     with open(fname, 'w') as dst:
         l = " ".join([str(i) for i in np.cumsum(np.binocount(labels))])
         print("{} {}".format(D, N) + " " + l + " " + nan, file=dst)
+
+        for x in data:
+            print(" ".join([str(i) for i in x]), file=dst)
