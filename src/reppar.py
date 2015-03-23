@@ -51,16 +51,16 @@ class ReportParser():
         delim is supposed to be one of <, >, <=, >=
         """
 
-        l = logging.getLogger(__name__)
+        logger = logging.getLogger(__name__)
 
         minv, maxv = self.minv, self.maxv
 
-        # digit-dot-digit
-        ddd = "\d*(\.\d*)?"
+        # sign-digit-dot-digit
+        sddd = "[+-]?\d+(\.\d+)?"
         # space-delim-space
         sds = "\s*{}\s*".format(delim)
         rulep = re.compile(
-            "({0}{1})?{2}\d*({1}{0})?".format(ddd, sds, fletter)
+            "({0}{1})?{2}\d*({1}{0})?".format(sddd, sds, fletter)
         )
 
         # lfl stands for `length of feature letter`
@@ -82,19 +82,21 @@ class ReportParser():
                 j = int(feature_range[1][lfl:])
                 minval, maxval = float(feature_range[0][:]), maxv
             else:
-                l.critical("Problem parsing feature range")
+                logger.critical("Problem parsing feature range")
                 sys.exit()
 
             # some features preceding `j` might have been skipped
             skip, i = [(minv, maxv) for j in range(i + 1, j)], j
-            # l.debug("{} + {} + {}".format(len(rule), len(skip), 1))
+            logger.debug(
+                "{} + {} + {}".format(len(rule), len(skip), 1)
+            )
             rule = rule + skip + [(minval, maxval)]
 
         # some features following `ftridx` might not be present
         lacking = [
             (minv, maxv) for k in range(i, self.nfeatures)
         ]
-        # l.debug("{} + {} + {}".format(len(rule), len(lacking), 0))
+        logger.debug("{} + {} + {}".format(len(rule), len(lacking), 0))
         rule = rule + lacking
 
         assert len(rule) == self.nfeatures
