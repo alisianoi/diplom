@@ -17,7 +17,12 @@ class TabDataParser:
         self.fname = fname
 
         with open(fname) as src:
-            header = [int(i) for i in src.readline().split()]
+            header = src.readline().split()
+            header[:-1] = [int(i) for i in header[:-1]]
+            if isinstance(header[-1], int):
+                header[-1] = int(header[-1])
+            else:
+                header[-1] = np.nan
 
             self.nfeatures = header[0]
             self.nclasses  = header[1]
@@ -53,18 +58,28 @@ class TabDataParser:
                 log.warning("there is data left in file: {}".format(i))
                 assert False
 
-    def np2tab(self, fname, data, labels, nan="-1"):
+    @staticmethod
+    def np2tab(fname, data, labels, nan=np.nan):
         cls = np.unique(labels)
         [N, D] = data.shape
 
         with open(fname, 'w') as dst:
-            l = " ".join(
-                [str(i) for i in np.cumsum(np.binocount(labels))]
+            # labels are from {1, 2, ...}; 0 is not a valid label
+            # Therefore, np.bincount(labels)[0] is 0
+            cumulative = np.cumsum(np.bincount(labels))
+            l = " ".join([str(i) for i in cumulative])
+            print(
+                "{} {}".format(D, len(cls)) + " " + l + " " + str(nan),
+                file=dst
             )
-            print("{} {}".format(D, N) + " " + l + " " + nan, file=dst)
 
-            for x in data:
-                print(" ".join([str(i) for i in x]), file=dst)
+            for i in range(len(cumulative) - 1):
+                for j in range(cumulative[i], cumulative[i + 1]):
+                    print(
+                        " ".join([str(x) for x in data[j, :]]),
+                        file=dst
+                    )
+                print(file=dst)
 
 
 
