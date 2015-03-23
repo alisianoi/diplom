@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import logging
-
 import numpy as np
+
+from math import log2
+from scipy.special import binom
 
 ### custom imports follow ###
 from log import logsettings
@@ -25,11 +27,14 @@ def apply_rule(rule, x):
 
 class RulesStats():
 
-    def __init__(self, pr):
-        """`pr` is an instance of processed rules class"""
-        log = logging.getLogger(__name__)
+    def __init__(self, rules):
+        self.rules = rules
+        self.stats = {}
 
-        rules, data = pr.rules, pr.data
+    def compute_stats(self, data):
+        logger = logging.getLogger(__name__)
+
+        rules = self.rules
         self.stats = {}
         for rlabel in rules.keys():
             self.stats[rlabel] = []
@@ -43,7 +48,25 @@ class RulesStats():
                             stats[xlabel][0] += 1
                         else:
                             stats[xlabel][1] += 1
+
+                # compute information gain; vokov, page 7
+                I = RulesStats.statcriterion(
+                    [stats[k] for k in stats.keys()]
+                )
+                if "I" in stats.keys():
+                    logger.warning("statcritetion overwrite")
+                stats["I"] = I
+
                 self.stats[rlabel].append(stats)
+
+    @staticmethod
+    def statcriterion(contingency_table):
+        x = [binom(sum(col), col[0]) for col in contingency_table]
+        y = binom(
+            sum([sum(col) for col in contingency_table]),
+            sum([col[0] for col in contingency_table])
+        )
+        return np.prod(x) / y
 
 
 if __name__ == "__main__":
