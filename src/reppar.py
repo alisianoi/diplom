@@ -107,8 +107,8 @@ class RulesParser(ReportParser):
 
     def __init__(self, fname):
         super().__init__(fname)
-        l = logging.getLogger(__name__)
-        l.debug("RulesParser.__init__()")
+        logger = logging.getLogger(__name__)
+        logger.debug("RulesParser.__init__()")
 
         rtables = self.soup.find_all(
             text=re.compile("^Найденные закономерности$")
@@ -120,14 +120,18 @@ class RulesParser(ReportParser):
 
             for key in rules.keys():
                 if key in self.rules.keys():
-                    l.debug("class {}, there were {} rules".format(
-                        key, len(self.rules[key]))
+                    logger.debug(
+                        "class {}, there were {} rules".format(
+                            key, len(self.rules[key])
+                        )
                     )
                     for rule in rules[key]:
                         if rule not in self.rules[key]:
                             self.rules[key].append(rule)
-                    l.debug("class {}, now there are {} rules".format(
-                        key, len(self.rules[key]))
+                    logger.debug(
+                        "class {}, now there are {} rules".format(
+                            key, len(self.rules[key])
+                        )
                     )
                 else:
                     self.rules[key] = rules[key]
@@ -136,12 +140,12 @@ class RulesParser(ReportParser):
             self.rules[key] = list(self.rules[key])
 
     def _table2rules(self, rtable):
-        l = logging.getLogger(__name__)
-        l.debug("RulesParser._table2rules()")
+        logger = logging.getLogger(__name__)
+        logger.debug("RulesParser._table2rules()")
 
         tr_rule = rtable.find_next("tr")
         nrules = int([s for s in tr_rule.strings][1])
-        l.info("there are a total of {} rules".format(nrules))
+        logger.info("there are a total of {} rules".format(nrules))
 
         rules, crules = {}, [] # `rules` shadows class instance
         rulep = re.compile("\(класс (\d)*\)$")
@@ -159,14 +163,14 @@ class RulesParser(ReportParser):
             if (idx == nidx): # this rule has the same class as before
                 crules.append(self._build_rule(s[1]))
             else:
-                l.info(
+                logger.info(
                     "switching classes: {} to {} on rule {}".format(
                         idx, nidx, i
                     )
                 )
                 rules[idx] = crules
                 crules, idx = [], nidx
-                l.info(
+                logger.info(
                     "class {}, {} candidate rules".format(
                         idx - 1, len(rules[idx - 1])
                     )
@@ -174,7 +178,7 @@ class RulesParser(ReportParser):
 
         # rules of the final class
         rules[idx] = crules
-        l.debug(
+        logger.debug(
             "class {}, {} candidate rules".format(
                 idx, len(rules[idx])
             )

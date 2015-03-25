@@ -22,7 +22,7 @@ class DiplomMainWindow(QMainWindow):
 
         self.setWindowTitle("Кластеризация логических закономерностей")
 
-        self.tabWidget.setTabText(0, "Пареметры")
+        self.tabWidget.setTabText(0, "Параметры")
         self.tabWidget.setTabText(1, "Результаты")
 
         self.gb_datasrc.setTitle("Источники данных")
