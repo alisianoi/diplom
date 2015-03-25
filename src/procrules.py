@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import logging
+import logging, copy
 
 import numpy as np
 
@@ -12,24 +12,26 @@ from reppar import RulesParser, ClassRulesParser
 class ProcRules():
 
     def __init__(self, tabpar, reppar):
-        log = logging.getLogger(__name__)
+        logger = logging.getLogger(__name__)
 
         # data and rules are dicts; key is labels of class,
         # value is a list of lists of tuples of that class;
-        self.data, self.rules = tabpar.data, reppar.rules
+        self.data = copy.deepcopy(tabpar.data)
+        self.rules = copy.deepcopy(reppar.rules)
         minv, maxv = reppar.minv, reppar.maxv
 
         for key in self.data.keys():
             assert key in self.rules.keys()
-            assert self.data[key] and self.rules[key]
+            assert not self.data[key] is None
+            assert not self.rules[key] is None
 
-        log.debug("data and rules look fine")
+        logger.debug("data and rules look fine")
 
         x = self.data[key][0]
         self.min, self.max = np.array(x), np.array(x)
         for y, X in self.data.items():
             for x in X:
-                if tabpar.NaN in x: log.warning("holes in data")
+                if tabpar.NaN in x: logger.warning("holes in data")
 
                 xmin, xmax = np.array(x), np.array(x)
 
@@ -40,19 +42,25 @@ class ProcRules():
             [], [i for i in zip(self.min, self.max)]
         )
 
-        log.debug("minmax rule: {}".format(self.minmax))
+        logger.debug("minmax rule: {}".format(self.minmax))
 
         for key in self.rules.keys():
             l, f = len(self.rules[key]), len(self.rules[key][0])
             self.rules[key] = np.reshape(
                 np.array(self.rules[key]), [l, 2 * f]
             )
+            assert len(self.rules[key]) == l
+            assert len(self.rules[key][0]) == 2 * f
             self.data[key] = np.array(self.data[key])
 
             for i in [-np.Inf, np.Inf]:
                 m = self.rules[key] == i
                 self.rules[key][m] = np.tile(self.minmax, (l, 1))[m]
 
+        # for key in self.rules.keys():
+        #     self.rules[key] = np.vstack(
+        #         {tuple(r) for r in self.rules[key]}
+        #     )
 
 if __name__ == "__main__":
     import os, argparse, logging.config
@@ -84,4 +92,5 @@ if __name__ == "__main__":
     else:
         assert False
 
-    r = ProcRules(tdp, rp)
+    # r = ProcRules(tdp, rp)
+    # r = ProcRules(tdp, rp)
