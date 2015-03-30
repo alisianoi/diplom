@@ -50,7 +50,6 @@ if __name__ == "__main__":
     for i, label in enumerate(np.unique(labels)):
         labels[old_labels == label] = i + 1
     labels = np.ravel(labels).astype(int)
-    ulabels = np.unique(labels)
 
     skf = StratifiedKFold(
         y=labels, n_folds=2, shuffle=False, random_state=42

@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+
+import logging, os.path
+
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+from sklearn.cluster import KMeans
+from sklearn.datasets.mldata import fetch_mldata
+from sklearn.cross_validation import StratifiedKFold
+
+from tabpar import TabDataParser
+from reppar import RulesParser
+from procrules import ProcRules
+
+from rulstat import RulesStats
+from rcluster import NRules
+from logical import SimpleVoting
+
+### successful datasets:
+# iris, wine, climate-model-simulation-crashes
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser()
+    parser.add_argument("dataset")
+    parser.add_argument(
+        "--data-home", nargs="?", default=os.path.join("../", "data"),
+        help="path to folder containing mldata folder",
+    )
+    parser.add_argument(
+        "--prefix", nargs="?", default=None,
+        help="prepend to all resulring files",
+    )
+    parser.add_argument(
+        "--target-name", nargs="?", default="label",
+        help="name of the column containing the target values"
+    )
+
+    parsed = parser.parse_args()
+
+    data_home = parsed.data_home
+    if parsed.dataset == "climate-model-simulation-crashes":
+        target_name = "int3"
+        if parsed.target_name != target_name:
+            logging.warning(
+                "{} target is {}".format(parsed.dataset, target_name)
+            )
+        parsed.target_name = target_name
+
+    bunch = fetch_mldata(
+        parsed.dataset, target_name=parsed.target_name,
+        data_home=data_home
+    )
+
+    data, labels = bunch['data'], bunch['target']
+    old_labels = np.empty_like(labels)
+    np.copyto(old_labels, labels)
+    for i, label in enumerate(np.unique(labels)):
+        labels[old_labels == label] = i + 1
+    labels = np.ravel(labels).astype(int)
+
+    skf = StratifiedKFold(
+        y=labels, n_folds=2, shuffle=False, random_state=42
+    )
+    # get the last of the two splits
+    for train_idx, test_idx in skf: pass
+
+    if parsed.prefix is None:
+        prefix = parsed.dataset
+    else:
+        prefix = parsed.prefix
+
+    frules = os.path.join(data_home, "{}-lrules.html".format(prefix))
+    ftrain = os.path.join(data_home, "{}-train.tab".format(prefix))
+    ftest = os.path.join(data_home, "{}-test.tab".format(prefix))
+    fall = os.path.join(data_home, "{}-all.tab".format(prefix))
+
+    tab_parser = TabDataParser(ftrain)
+    rules_parser = RulesParser(frules)
+
+    processor = ProcRules(tab_parser, rules_parser)
+    rules, rulesbin = processor.rules, processor.rulesbin
+
+    vote_mdl = SimpleVoting(rules)
+
+    y = vote_mdl.fit(data[test_idx, :])
+
+    full_correct = sum(
+        [1 for i, j in zip(y, labels[test_idx]) if i == j]
+    ) / len(labels[test_idx])
+
+    data_train = TabDataParser(ftrain)
+    # stats = RulesStats(rules)
+    # stats.compute_stats(data_train.data)
+
+    n_clusters = min([len(rules[k]) for k in rules.keys()])
+
+    correct = []
+    for i in range(2, n_clusters + 1):
+        km = KMeans(n_clusters=i)
+        nrules = {}
+        for k in rules.keys():
+            km.fit(rules[k])
+            nrules[k] = km.cluster_centers_
+
+        nvotemdl = SimpleVoting(nrules)
+        y = nvotemdl.fit(data[test_idx, :])
+        correct.append(
+            sum(
+                [1 for i, j in zip(y, labels[test_idx]) if i == j]
+            ) / len(labels[test_idx])
+        )
+
+
+    igbincorrect = []
+    for i in range(2, n_clusters + 1):
+        nrules = {}
+        for k in rulesbin.keys():
+            km = NRules(i=k, n_clusters=i)
+            km.fit(rulesbin[k])
+            km.restore(
+                data[train_idx, :], labels[train_idx],
+                RulesStats.infogain
+            )
+            nrules[k] = km.cluster_centers_
+
+        binvotemdl = SimpleVoting(nrules)
+        y = binvotemdl.fit(data[test_idx, :])
+        igbincorrect.append(
+            sum(
+                [1 for i, j in zip(y, labels[test_idx]) if i == j]
+            ) / len(labels[test_idx])
+        )
+
+    stbincorrect = []
+    for i in range(2, n_clusters + 1):
+        nrules = {}
+        for k in rulesbin.keys():
+            km = NRules(i=k, n_clusters=i)
+            km.fit(rulesbin[k])
+            km.restore(
+                data[train_idx, :], labels[train_idx],
+                RulesStats.statcriterion
+            )
+            nrules[k] = km.cluster_centers_
+
+        binvotemdl = SimpleVoting(nrules)
+        y = binvotemdl.fit(data[test_idx, :])
+        stbincorrect.append(
+            sum(
+                [1 for i, j in zip(y, labels[test_idx]) if i == j]
+            ) / len(labels[test_idx])
+        )
+
+    x = list(range(2, n_clusters + 1))
+    cutoff = [full_correct for i in range(2, n_clusters + 1)]
+    plt.plot(x, cutoff, '-r', linewidth=2, label='original')
+    plt.plot(x, correct, '-ob', label='2D clustering', markersize=3)
+    plt.plot(x, igbincorrect, '-og', label='N IGain', markersize=3)
+    plt.plot(x, stbincorrect, '-oc', label='N Stat', markersize=3)
+    plt.legend(loc=4)
+    plt.xlabel("number of rules")
+    plt.ylabel("correctly classified, %")
+    plt.savefig(
+        "../LaTeX/graphs/{}.pdf".format(prefix), bbox_inches="tight"
+    )
+    plt.show()
