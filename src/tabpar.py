@@ -63,9 +63,11 @@ class TabDataParser:
         cls = np.unique(labels)
         [N, D] = data.shape
 
+        logger = logging.getLogger(__name__)
         with open(fname, 'w') as dst:
             # labels are from {1, 2, ...}; 0 is not a valid label
             # Therefore, np.bincount(labels)[0] is 0
+            if 0 in labels: logger.critical("labels must be 1, 2, ...")
             cumulative = np.cumsum(np.bincount(labels))
             l = " ".join([str(i) for i in cumulative])
             print(
