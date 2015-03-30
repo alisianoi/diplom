@@ -8,8 +8,10 @@ import numpy as np
 from log import logsettings
 from tabpar import TabDataParser
 from reppar import RulesParser, ClassRulesParser
+from misc import apply_rule
 
-class ProcRules():
+
+class ProcRules:
 
     def __init__(self, tabpar, reppar):
         logger = logging.getLogger(__name__)
@@ -18,6 +20,7 @@ class ProcRules():
         # value is a list of lists of tuples of that class;
         self.data = copy.deepcopy(tabpar.data)
         self.rules = copy.deepcopy(reppar.rules)
+        self.rulesbin = {}
         minv, maxv = reppar.minv, reppar.maxv
 
         for key in self.data.keys():
@@ -35,8 +38,8 @@ class ProcRules():
 
                 xmin, xmax = np.array(x), np.array(x)
 
-                self.min = np.min(np.array((self.min, xmin)), 0)
-                self.max = np.max(np.array((self.max, xmax)), 0)
+                self.min = np.min(np.array((self.min, xmin)), axis=0)
+                self.max = np.max(np.array((self.max, xmax)), axis=0)
 
         self.minmax = np.append(
             [], [i for i in zip(self.min, self.max)]
@@ -57,10 +60,21 @@ class ProcRules():
                 m = self.rules[key] == i
                 self.rules[key][m] = np.tile(self.minmax, (l, 1))[m]
 
-        # for key in self.rules.keys():
-        #     self.rules[key] = np.vstack(
-        #         {tuple(r) for r in self.rules[key]}
-        #     )
+        for rkey in self.rules.keys():
+            self.rulesbin[rkey] = []
+            for rule in self.rules[rkey]:
+                binrule = []
+                for xkey in self.data.keys():
+                    for x in self.data[xkey]:
+                        if apply_rule(rule, x):
+                            binrule.append(1)
+                        else:
+                            binrule.append(0)
+
+                self.rulesbin[rkey].append(binrule)
+
+            self.rulesbin[rkey] = np.vstack(self.rulesbin[rkey])
+
 
 if __name__ == "__main__":
     import os, argparse, logging.config
@@ -92,5 +106,4 @@ if __name__ == "__main__":
     else:
         assert False
 
-    # r = ProcRules(tdp, rp)
-    # r = ProcRules(tdp, rp)
+    r = ProcRules(tdp, rp)
