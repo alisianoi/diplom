@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 
+from sklearn.preprocessing import scale
 from sklearn.datasets.mldata import fetch_mldata
 from sklearn.cross_validation import StratifiedKFold
 
@@ -38,13 +39,20 @@ if __name__ == "__main__":
                 "{} target is {}".format(parsed.dataset, target_name)
             )
         parsed.target_name = target_name
+    elif parsed.dataset == "uci-20070111-liver-disorders":
+        target_name = "int2"
+        if parsed.target_name != target_name:
+            logging.warning(
+                "{} target is {}".format(parsed.dataset, target_name)
+            )
+        parsed.target_name = target_name
 
     bunch = fetch_mldata(
         parsed.dataset, target_name=parsed.target_name,
         data_home=data_home
     )
 
-    data, labels = bunch['data'], bunch['target']
+    data, labels = scale(bunch['data']), bunch['target']
     old_labels = np.empty_like(labels)
     np.copyto(old_labels, labels)
     for i, label in enumerate(np.unique(labels)):

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
-import logging, os.path
-
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from sklearn.cluster import KMeans
+from sklearn.preprocessing import scale
 from sklearn.datasets.mldata import fetch_mldata
 from sklearn.cross_validation import StratifiedKFold
+from sklearn.cluster import KMeans
 
 from tabpar import TabDataParser
 from reppar import RulesParser
@@ -20,9 +19,14 @@ from logical import SimpleVoting
 
 ### successful datasets:
 # iris, wine, climate-model-simulation-crashes
+# ionosphere as decent overfit example
 
 if __name__ == "__main__":
+    import logging, logging.config, os.path
     from argparse import ArgumentParser
+    from log import logsettings
+    logging.config.dictConfig(logsettings)
+
 
     parser = ArgumentParser()
     parser.add_argument("dataset")
@@ -49,13 +53,20 @@ if __name__ == "__main__":
                 "{} target is {}".format(parsed.dataset, target_name)
             )
         parsed.target_name = target_name
+    elif parsed.dataset == "uci-20070111-liver-disorders":
+        target_name = "int2"
+        if parsed.target_name != target_name:
+            logging.warning(
+                "{} target is {}".format(parsed.dataset, target_name)
+            )
+        parsed.target_name = target_name
 
     bunch = fetch_mldata(
         parsed.dataset, target_name=parsed.target_name,
         data_home=data_home
     )
 
-    data, labels = bunch['data'], bunch['target']
+    data, labels = scale(bunch['data']), bunch['target']
     old_labels = np.empty_like(labels)
     np.copyto(old_labels, labels)
     for i, label in enumerate(np.unique(labels)):
@@ -113,7 +124,6 @@ if __name__ == "__main__":
                 [1 for i, j in zip(y, labels[test_idx]) if i == j]
             ) / len(labels[test_idx])
         )
-
 
     igbincorrect = []
     for i in range(2, n_clusters + 1):
