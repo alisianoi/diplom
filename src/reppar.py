@@ -148,7 +148,7 @@ class RulesParser(ReportParser):
         logger.info("there are a total of {} rules".format(nrules))
 
         rules, crules = {}, [] # `rules` shadows class instance
-        rulep = re.compile("\(класс (\d)*\)$")
+        rulep = re.compile("\(класс (\d*)\)$")
 
         tr_rule = tr_rule.next_sibling
         s = [s for s in tr_rule.strings]
