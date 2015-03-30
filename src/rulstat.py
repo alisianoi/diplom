@@ -11,18 +11,7 @@ from log import logsettings
 from procrules import ProcRules
 from tabpar import TabDataParser
 from reppar import RulesParser, ClassRulesParser
-
-
-def apply_rule(rule, x):
-    assert len(rule) == 2 * len(x)
-
-    t = 0
-    for feature in x:
-        if not (rule[t] <= feature and feature <= rule[t + 1]):
-            return False
-        t += 2
-
-    return True
+from misc import apply_rule
 
 
 class RulesStats():
@@ -67,6 +56,29 @@ class RulesStats():
             sum([col[0] for col in contingency_table])
         )
         return np.prod(x) / y
+
+    @staticmethod
+    def infogain(contingency_table):
+        total = np.sum(contingency_table)
+        entropy_before = sum([
+            - sum(col) / total * log2(sum(col) / total)
+            for col in contingency_table
+        ])
+        N = [
+            sum([col[i] for col in contingency_table])
+            for i in range(2)
+        ]
+        entropy_lr = [
+            sum([
+                - col[i] / N[i] * log2(col[i] / N[i]) if col[i] else 0
+                for col in contingency_table
+            ]) for i in range(2)
+        ]
+        entropy_after = sum([
+            N[i] / total * entropy
+            for i, entropy in enumerate(entropy_lr)
+        ])
+        return entropy_before - entropy_after
 
 
 if __name__ == "__main__":
