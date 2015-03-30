@@ -5,7 +5,10 @@ import os.path
 from PyQt5 import uic
 from PyQt5.QtCore import QObject, QThread
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QTableWidget
+from PyQt5.QtCore import Qt, QVariant
+from PyQt5.QtCore import QAbstractTableModel
+from PyQt5.QtWidgets import QTableView
+from PyQt5.QtWidgets import QMainWindow, QFileDialog
 
 from sklearn.cluster import KMeans
 
@@ -24,6 +27,7 @@ class DiplomMainWindow(QMainWindow):
 
         self.tabWidget.setTabText(0, "Параметры")
         self.tabWidget.setTabText(1, "Результаты")
+        self.tabWidget.setTabEnabled(1, False)
 
         self.gb_datasrc.setTitle("Источники данных")
         self.freport = os.path.join("..", "data", "wine-lrules.html")
@@ -92,6 +96,7 @@ class DiplomMainWindow(QMainWindow):
     @pyqtSlot(RulesParser)
     def onReportParsed(self, report_parser):
         self.report_parser = report_parser
+        self.nfeatures = report_parser.nfeatures
         self.le_repfname.setText(self.freport)
         self.pb_report.setEnabled(True)
 
@@ -171,6 +176,10 @@ class DiplomMainWindow(QMainWindow):
         km.fit(pr.rules[int(self.cb_class.currentText())])
 
         print(km.cluster_centers_)
+        centers_table = Table(km.cluster_centers_)
+        self.tv_centers.setModel(centers_table)
+
+        self.tabWidget.setTabEnabled(1, True)
 
 
 class RulesWorker(QObject):
@@ -207,6 +216,25 @@ class TabDataWorker(QObject):
             self.done.emit(TabDataParser(self.fname))
         except:
             self.failed.emit()
+
+
+class Table(QAbstractTableModel):
+    def __init__(self, centers):
+        super().__init__()
+        self.centers = centers
+
+    def rowCount(self, parent):
+        return len(self.centers)
+
+    def columnCount(self, parent):
+        return len(self.centers[0])
+
+    def data(self, index, role):
+        if not index.isValid():
+            return QVariant()
+        elif role != Qt.DisplayRole:
+            return QVariant()
+        return QVariant(float(self.centers[index.row()][index.column()]))
 
 if __name__ == "__main__":
     import sys, logging.config
