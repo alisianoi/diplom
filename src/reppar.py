@@ -191,15 +191,17 @@ class ClassRulesParser(ReportParser):
 
     def __init__(self, fname):
         super().__init__(fname)
-        l = logging.getLogger(__name__)
-        l.debug("RulesClassParser.__init__()")
+        logger = logging.getLogger(__name__)
+        logger.debug("RulesClassParser.__init__()")
 
         cnames = self.soup.find_all(text=re.compile("^Класс [\d]*$"))
         assert len(cnames) == self.nclasses
 
         self.rules = {}
         for i, cname in enumerate(cnames):
-            l.debug("class {} out of {}:".format(i + 1, len(cnames)))
+            logger.debug(
+                "class {} out of {}:".format(i + 1, len(cnames))
+            )
 
             # advance to the first rule of current cname
             tr_rule = cname.find_next("tr")
@@ -217,7 +219,7 @@ class ClassRulesParser(ReportParser):
                 tr_rule = tr_rule.next_sibling
 
             self.rules[i + 1] = crules
-            l.debug("{} rules for class {}".format(
+            logger.debug("{} rules for class {}".format(
                 len(crules), i + 1)
             )
 
