@@ -28,6 +28,11 @@ class ProcRules:
             assert not self.data[key] is None
             assert not self.rules[key] is None
 
+        for key in self.rules.keys():
+            assert key in self.data.keys()
+            assert not self.data[key] is None
+            assert not self.rules[key] is None
+
         logger.debug("data and rules look fine")
 
         x = self.data[key][0]

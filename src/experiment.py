@@ -24,8 +24,10 @@ from logical import SimpleVoting
 if __name__ == "__main__":
     import logging, logging.config, os.path
     from argparse import ArgumentParser
+
     from log import logsettings
     logging.config.dictConfig(logsettings)
+    logger = logging.getLogger(__name__)
 
 
     parser = ArgumentParser()
@@ -92,8 +94,10 @@ if __name__ == "__main__":
     tab_parser = TabDataParser(ftrain)
     rules_parser = RulesParser(frules)
 
+    logger.debug("about to process rules")
     processor = ProcRules(tab_parser, rules_parser)
     rules, rulesbin = processor.rules, processor.rulesbin
+    logger.debug("rules processing finished")
 
     vote_mdl = SimpleVoting(rules)
 
@@ -103,9 +107,8 @@ if __name__ == "__main__":
         [1 for i, j in zip(y, labels[test_idx]) if i == j]
     ) / len(labels[test_idx])
 
+    logger.debug("full_correct: {}".format(full_correct))
     data_train = TabDataParser(ftrain)
-    # stats = RulesStats(rules)
-    # stats.compute_stats(data_train.data)
 
     n_clusters = min([len(rules[k]) for k in rules.keys()])
 

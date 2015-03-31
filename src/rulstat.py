@@ -60,6 +60,8 @@ class RulesStats():
     @staticmethod
     def infogain(contingency_table):
         total = np.sum(contingency_table)
+        assert total != 0
+
         entropy_before = sum([
             - sum(col) / total * log2(sum(col) / total)
             for col in contingency_table
