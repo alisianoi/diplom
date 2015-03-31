@@ -11,7 +11,7 @@ from rulstat import RulesStats
 class NRules:
     def __init__(self, i, n_clusters=2):
         self.km = KMeans(n_clusters=n_clusters)
-        self.i, self.thresholds = i, np.linspace(0.1, 0.9, 36)
+        self.i, self.thresholds = i, np.linspace(0.1, 0.9, 10)
 
     def fit(self, X, y=None):
         self.km.fit(X, y)

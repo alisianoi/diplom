@@ -70,9 +70,15 @@ if __name__ == "__main__":
     else:
         prefix = parsed.prefix
 
-    ftrain = os.path.join(data_home, "{}-train.tab".format(prefix))
-    ftest = os.path.join(data_home, "{}-test.tab".format(prefix))
-    fall = os.path.join(data_home, "{}-all.tab".format(prefix))
+    ftrain = os.path.join(
+        data_home, "{}-train.tab".format(parsed.dataset)
+    )
+    ftest = os.path.join(
+        data_home, "{}-test.tab".format(parsed.dataset)
+    )
+    fall = os.path.join(
+        data_home, "{}-all.tab".format(parsed.dataset)
+    )
 
     TabDataParser.np2tab(ftrain, data[train_idx, :], labels[train_idx])
     TabDataParser.np2tab(ftest, data[test_idx, :], labels[test_idx])

@@ -87,9 +87,16 @@ if __name__ == "__main__":
         prefix = parsed.prefix
 
     frules = os.path.join(data_home, "{}-lrules.html".format(prefix))
-    ftrain = os.path.join(data_home, "{}-train.tab".format(prefix))
-    ftest = os.path.join(data_home, "{}-test.tab".format(prefix))
-    fall = os.path.join(data_home, "{}-all.tab".format(prefix))
+
+    ftrain = os.path.join(
+        data_home, "{}-train.tab".format(parsed.dataset)
+    )
+    ftest = os.path.join(
+        data_home, "{}-test.tab".format(parsed.dataset)
+    )
+    fall = os.path.join(
+        data_home, "{}-all.tab".format(parsed.dataset)
+    )
 
     tab_parser = TabDataParser(ftrain)
     rules_parser = RulesParser(frules)
