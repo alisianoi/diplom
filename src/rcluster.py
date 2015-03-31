@@ -20,6 +20,8 @@ class NRules:
         """data is an np.array"""
         assert self.km is not None
 
+        logger = logging.getLogger(__name__)
+
         self.cluster_centers_ = []
         for center in self.km.cluster_centers_:
             infovals = []
@@ -44,12 +46,19 @@ class NRules:
                 )
 
             mask = center > self.thresholds[np.argmax(infovals)]
-            minvals = np.min(data[mask, :], axis=0)
-            maxvals = np.max(data[mask, :], axis=0)
+            # assert np.any(mask)
+            if np.any(mask):
 
-            self.cluster_centers_.append(
-                np.hstack([(i, j) for i, j in zip(minvals, maxvals)])
-            )
+                minvals = np.min(data[mask, :], axis=0)
+                maxvals = np.max(data[mask, :], axis=0)
+
+                self.cluster_centers_.append(
+                    np.hstack(
+                        [(i, j) for i, j in zip(minvals, maxvals)]
+                    )
+                )
+            else:
+                logger.warning("cluster center is inadequate")
 
 if __name__ == "__main__":
     import logging.config
