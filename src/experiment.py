@@ -197,7 +197,7 @@ if __name__ == "__main__":
         markersize=markersize
     )
     plt.plot(
-        x, stbincorrect, '-oc', label='бинарный вектор, Stat',
+        x, stbincorrect, '-sc', label='бинарный вектор, Stat',
         markersize=markersize
     )
     plt.legend(loc=4)
