@@ -175,15 +175,34 @@ if __name__ == "__main__":
             ) / len(labels[test_idx])
         )
 
+    plt.rcdefaults()
+    plt.rc('text', usetex=True)
+    plt.rc('text.latex', unicode=True)
+    plt.rc('text.latex', preamble=r"\usepackage[utf8]{inputenc}")
+    plt.rc('text.latex', preamble=r"\usepackage[russian]{babel}")
+    plt.rcParams['font.serif'] = 'cmunst'
+
     x = list(range(2, n_clusters + 1))
     cutoff = [full_correct for i in range(2, n_clusters + 1)]
-    plt.plot(x, cutoff, '-r', linewidth=2, label='original')
-    plt.plot(x, correct, '-ob', label='2D clustering', markersize=3)
-    plt.plot(x, igbincorrect, '-og', label='N IGain', markersize=3)
-    plt.plot(x, stbincorrect, '-oc', label='N Stat', markersize=3)
+    plt.plot(
+        x, cutoff, '-r', linewidth=2, label='простое голосование'
+    )
+    markersize=4
+    plt.plot(
+        x, correct, '-ob', label='вектор левых и правых границ',
+        markersize=markersize
+    )
+    plt.plot(
+        x, igbincorrect, '-^g', label='бинарный вектор, IGain',
+        markersize=markersize
+    )
+    plt.plot(
+        x, stbincorrect, '-oc', label='бинарный вектор, Stat',
+        markersize=markersize
+    )
     plt.legend(loc=4)
-    plt.xlabel("number of rules")
-    plt.ylabel("correctly classified, %")
+    plt.xlabel("количество логических закономерностей")
+    plt.ylabel("доля верно классифицированных объектов")
     plt.savefig(
         "../LaTeX/graphs/{}.pdf".format(prefix), bbox_inches="tight"
     )
