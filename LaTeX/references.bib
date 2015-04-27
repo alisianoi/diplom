@@ -1,10 +1,3 @@
-@online{mnistlecun,
-    author = "Lecun, Yann and Cortes, Corinna",
-    keywords = "ai, mnist, recognition",
-    title = "The MNIST database of handwritten digits",
-    url = "http://yann.lecun.com/exdb/mnist/",
-}
-
 @book{bishop06,
  author = {Bishop, Christopher M.},
  title = {Pattern Recognition and Machine Learning},
@@ -13,6 +6,27 @@
  publisher = {Springer-Verlag New York, Inc.},
  address = {Secaucus, NJ, USA},
  numpages = {740},
+}
+
+@book{bishop95neural,
+  title={Neural Networks for Pattern Recognition},
+  author={Bishop, Christopher M.},
+  year={1995},
+  isbn={9780198538646},
+  series={Advanced Texts in Econometrics},
+  publisher={Clarendon Press},
+  numpages = {482},
+}
+
+@book{hosmer13,
+ author = {
+  Hosmer, David W. and Lemeshov, Stanley and Sturdivant, Rodney X.
+ },
+ title = {Applied Logistic Regression},
+ year = {2013},
+ isbn = {978-0-470-58247-3},
+ publisher = {John Wiley \& Sons, Inc.},
+ numpages = {528},
 }
 
 @book{recognition06,
@@ -121,22 +135,6 @@
     publisher = "Morgan Kaufmann",
     year = "1995",
     url = "citeseer.ist.psu.edu/cohen95fast.html",
-    annote = "
-        RIPPER$k$ (Repeated Iterative Pruning to Produce Error Reduction)~---
-        простой и эффективный алгоритм
-        построения покрывающего набора (решающего списка) конъюнкций.
-        Алгоритм имеет
-        столь~же высокую обобщающую способность, как C4.5rules
-        и~столь~же высокую эффективность, как IREP.
-        Объём вычислений практически линеен по~длине обучающей выборки,
-        что позволяет обрабатывать сотни тысяч объектов за~приемлемое время.
-        Алгоритм RIPPER$k$ отличается от~IREP тремя модификациями.
-        1.~Изменён эвристический критерий, оптимизируемый при редукции правил.
-        2.~Введён новый критерий останова, основанный на~принципе
-           минимума длины описания~(MDL).
-        3.~Построенные правила поочерёдно перестраиваются $k$~раз.
-        Эмпирическое сравнение всех упомянутых алгоритмов
-        проведено на~22 реальных задачах из~репозитория~UCI."
 }
 
 @inproceedings{cohen99simple,
@@ -146,31 +144,9 @@
     pages = "335-342",
     year = "1999",
     url = "citeseer.ist.psu.edu/198445.html",
-    annote = "
-        SLIPPER (Simple Learner with Iterative Pruning
-        to Produce Error Reduction)~---
-        простой и эффективный алгоритм классификации,
-        основанный на взвешенном голосовании конъюнкций.
-        Для построения набора конъюнкций используется бустинг.
-        В~роли слабого классификатора может выступать
-        произвольный жадный алгоритм синтеза конъюнкций.
-        Конъюнкции наращиваются по~случайной подвыборке,
-        составляющей порядка 2/3 данных,
-        затем редуцируются по~оставшейся части данных.
-        Описаны эксперименты по проверке алгоритма
-        на~наборе из~32~реальных задач,
-        причём только половина задач использовалась
-        на~этапе разработки алгоритма,
-        на~остальных производилось финальное тестирование.
-        Точность SLIPPER оказалась несколько выше,
-        чем у~алгоритмов RIPPER, C4.5, C5.0,
-        а~скорость~--- на~порядок ниже, но~в~пределах $m\ln m$,
-        где $m$~--- длина выборки.
-        Среднее (по~задачам) количество конъюнкций~---
-        втрое больше, чем у~RIPPER."
 }
 
-@INPROCEEDINGS{macqueen67,
+@@inproceedings{macqueen67,
     author = {J. B. Macqueen},
     title = {
     Some methods for classification and analysis of multivariate
@@ -213,4 +189,19 @@ year = {2008},
 volume = {48},
 number = {2},
 pages = {329--344},
+}
+
+@article{cortes95,
+year={1995},
+issn={0885-6125},
+journal={Machine Learning},
+volume={20},
+number={3},
+doi={10.1007/BF00994018},
+title={Support-vector networks},
+url={http://dx.doi.org/10.1007/BF00994018},
+publisher={Kluwer Academic Publishers},
+author={Cortes, Corinna and Vapnik, Vladimir},
+pages={273-297},
+language={English}
 }
