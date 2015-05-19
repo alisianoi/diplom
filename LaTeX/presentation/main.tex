@@ -91,8 +91,7 @@
     \begin{enumerate}
     \item \(\exists x\in K\colon \varphi(x) = 1\)
     \item \(\forall x\not\in K\colon \varphi(x) = 0\)
-    \item \(\varphi(x)\) максимизирует некоторый критерий качества
-      предиката \(\Phi\).
+    \item \(\varphi(x)\) максимизирует некоторый критерий качества \(\Phi\).
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -123,8 +122,16 @@
 \begin{frame}{Обработка множества логических закономерностей}
   \begin{enumerate}
   \item Для каждого из \(t\) правил cоставить признаковое описание
+    \begin{enumerate}
+    \item Вектор левых и правых границ
+    \item Бнаризованное описание правил
+    \end{enumerate}
   \item Кластеризовать на \(k\leq t\) кластеров, найти их центры
   \item По центрам кластеров построить \(k\) новых правил
+    \begin{enumerate}
+    \item Выбрать центры кластеров в качестве новых правил
+    \item Центры кластеров \(+\) критерий качества \(\rightarrow\) новые правила
+    \end{enumerate}
   \end{enumerate}
     \begin{table}[!htbp]
       \begin{tabu}{X[1.2] X[2] X[2.8] X}
